@@ -1,0 +1,25 @@
+{
+  "name": "hackaton",
+  "version": "0.1.0",
+  "description": "Wrapper shell nodejs client to test queries on sandboxes",
+  "main": "test.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mongodbcodes/hackaton.git"
+  },
+  "author": "Gormartsen",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mongodbcodes/hackaton/issues"
+  },
+  "homepage": "https://github.com/mongodbcodes/hackaton#readme",
+  "dependencies": {
+    "cli-table3": "^0.5.1",
+    "debug": "^4.1.1",
+    "dotenv": "^7.0.0",
+    "mongodb": "^3.2.3"
+  }
+}
