@@ -4,7 +4,7 @@
   "description": "Wrapper shell nodejs client to test queries on sandboxes",
   "main": "test.js",
   "scripts": {
-    "run": "node test.js",
+    "test": "node test.js",
     "cs": "eslint --fix test.js"
   },
   "repository": {
