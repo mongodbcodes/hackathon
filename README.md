@@ -1,5 +1,14 @@
 # hackaton
-Wrapper shell nodejs client to test queries on sandboxes
+This test code written to simplify the way how "Full Text Search" changes can be tested.
+I put server online with 32GB Ram 3.2Ghz CPU (4C/8T) SSD drives (no raid)
+
+Each mongo instance (origin and fts) working with it's own SSD to minimize side effects on tests.
+Identical configs and database. mongod code diferences only.
+Access to mongo is public by user `test` pass `test` for readonly.
+So you can do tests right on the server with explain if you wish.
+Check .env file in this repo direct server connection.
+Othervise use this repo code to perform tests.
+
 
 # How to run tests
 
