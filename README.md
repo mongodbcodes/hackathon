@@ -13,3 +13,12 @@ npm run test
 # Example output
 
 ![test perform](https://raw.githubusercontent.com/mongodbcodes/hackaton/master/example.png)
+
+
+# Advanced tests
+
+`node test.js "\"red car\" -truck" serial`
+- first argument - search string
+- second argument is optional "serial" - it means that tests are runing serial not in parallel (default mode) 
+
+![test perform](https://raw.githubusercontent.com/mongodbcodes/hackaton/master/example-advanced.png)

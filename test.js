@@ -13,106 +13,147 @@ let search = process.argv[2];
 
 let isSerial = false;
 
-if (!search) {
-  search = "little dog";
+if(process.argv[3] == "serial") {
+  isSerial = true;
 }
 
-let testSuite = [
-  {
-    title: 'limit 10',
-    search: "little dog",
-    params: {
-      limit: 10,
+let testSuite = [];
+
+if (search) {
+  //search = "little dog";
+  testSuite = [
+    {
+      title: 'limit 10',
+      search: search,
+      params: {
+        limit: 10,
+      }
+    },
+    {
+      title: 'limit 10, score sort',
+      search: search,
+      params: {
+        limit: 10,
+        score: true,
+        sort: {score: { $meta: "textScore" }}
+      }
+    },
+    {
+      title: 'limit 100',
+      search: search,
+      params: {
+        limit: 100,
+      }
+    },
+    {
+      title: 'limit 100, score sort',
+      search: search,
+      params: {
+        limit: 100,
+        score: true,
+        sort: {score: { $meta: "textScore" }}
+      }
     }
-  },
-  {
-    title: 'limit 10, score sort',
-    search: "earth planet",
-    params: {
-      limit: 10,
-      score: true,
-      sort: {score: { $meta: "textScore" }}
+  ]
+} else {
+
+  testSuite = [
+    {
+      title: 'limit 10',
+      search: "little dog",
+      params: {
+        limit: 10,
+      }
+    },
+    {
+      title: 'limit 10, score sort',
+      search: "earth planet",
+      params: {
+        limit: 10,
+        score: true,
+        sort: {score: { $meta: "textScore" }}
+      }
+    },
+    {
+      title: 'limit 100',
+      search: "house painting",
+      params: {
+        limit: 100,
+      }
+    },
+    {
+      title: 'limit 100, score sort',
+      search: "big cat",
+      params: {
+        limit: 100,
+        score: true,
+        sort: {score: { $meta: "textScore" }}
+      }
     }
-  },
-  {
-    title: 'limit 100',
-    search: "house painting",
-    params: {
-      limit: 100,
+    ,
+    {
+      title: 'limit 100',
+      search: '"dancing rabbit"',
+      params: {
+        limit: 100,
+      }
+    },
+    {
+      title: 'limit 100, score sort',
+      search: '"black hole"',
+      params: {
+        limit: 100,
+        score: true,
+        sort: {score: { $meta: "textScore" }}
+      }
+    },
+    {
+      title: 'limit 1000',
+      search: "sunny day -tomorrow",
+      params: {
+        limit: 1000,
+      }
+    },
+    {
+      title: 'limit 1000, score sort',
+      search: "moon above -clouds",
+      params: {
+        limit: 1000,
+        score: true,
+        sort: {score: { $meta: "textScore" }}
+      }
     }
-  },
-  {
-    title: 'limit 100, score sort',
-    search: "big cat",
-    params: {
-      limit: 100,
-      score: true,
-      sort: {score: { $meta: "textScore" }}
-    }
-  }
-  ,
-  {
-    title: 'limit 100',
-    search: '"dancing rabbit"',
-    params: {
-      limit: 100,
-    }
-  },
-  {
-    title: 'limit 100, score sort',
-    search: '"black hole"',
-    params: {
-      limit: 100,
-      score: true,
-      sort: {score: { $meta: "textScore" }}
-    }
-  },
-  {
-    title: 'limit 1000',
-    search: "sunny day -tomorrow",
-    params: {
-      limit: 1000,
-    }
-  },
-  {
-    title: 'limit 1000, score sort',
-    search: "moon above -clouds",
-    params: {
-      limit: 1000,
-      score: true,
-      sort: {score: { $meta: "textScore" }}
-    }
-  }
-  ,
-  {
-    title: 'all',
-    search: '"little dog visit"',
-    params: {
-    }
-  },
-  {
-    title: 'all, score sort',
-    search: '"big small man"',
-    params: {
-      score: true,
-      sort: {score: { $meta: "textScore" }}
-    }
-  },
-  {
-    title: 'all',
-    search: '"Wall Street Journal"',
-    params: {
-    }
-  },
-  {
-    title: 'all, score sort',
-    search: '"Real-Estate Investing Guidebook"',
-    params: {
-      score: true,
-      sort: {score: { $meta: "textScore" }}
-    }
-  },
-]
+    ,
+    {
+      title: 'all',
+      search: '"little dog visit"',
+      params: {
+      }
+    },
+    {
+      title: 'all, score sort',
+      search: '"big small man"',
+      params: {
+        score: true,
+        sort: {score: { $meta: "textScore" }}
+      }
+    },
+    {
+      title: 'all',
+      search: '"Wall Street Journal"',
+      params: {
+      }
+    },
+    {
+      title: 'all, score sort',
+      search: '"Real-Estate Investing Guidebook"',
+      params: {
+        score: true,
+        sort: {score: { $meta: "textScore" }}
+      }
+    },
+  ]
+}
 let performResults = {}
 
 let testServersCount = 2;
