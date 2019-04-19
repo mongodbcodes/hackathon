@@ -4,7 +4,8 @@
   "description": "Wrapper shell nodejs client to test queries on sandboxes",
   "main": "test.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "run": "node test.js",
+    "cs": "eslint --fix test.js"
   },
   "repository": {
     "type": "git",

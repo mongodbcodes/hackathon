@@ -16,15 +16,79 @@ if (!search) {
 
 let testSuite = [
   {
-    title: 'Search first 10, no score sort',
+    title: 'limit 10, no score sort',
+    search: search,
     params: {
       limit: 10,
     }
   },
   {
-    title: 'Search first 10, score sort',
+    title: 'limit 10, score sort',
+    search: search,
     params: {
       limit: 10,
+      score: true,
+      sort: {score: { $meta: "textScore" }}
+    }
+  },
+  {
+    title: 'limit 100, no score sort',
+    search: search,
+    params: {
+      limit: 100,
+    }
+  },
+  {
+    title: 'limit 100, score sort',
+    search: search,
+    params: {
+      limit: 100,
+      score: true,
+      sort: {score: { $meta: "textScore" }}
+    }
+  }
+  ,
+  {
+    title: 'limit 100, no score sort',
+    search: '"' + search + '"',
+    params: {
+      limit: 100,
+    }
+  },
+  {
+    title: 'limit 100, score sort',
+    search: '"' + search + '"',
+    params: {
+      limit: 100,
+      score: true,
+      sort: {score: { $meta: "textScore" }}
+    }
+  },
+  {
+    title: 'all, no score sort',
+    search: search,
+    params: {
+    }
+  },
+  {
+    title: 'all, score sort',
+    search: search,
+    params: {
+      score: true,
+      sort: {score: { $meta: "textScore" }}
+    }
+  }
+  ,
+  {
+    title: 'all, no score sort',
+    search: '"' + search + '"',
+    params: {
+    }
+  },
+  {
+    title: 'all, score sort',
+    search: '"' + search + '"',
+    params: {
       score: true,
       sort: {score: { $meta: "textScore" }}
     }
@@ -37,28 +101,32 @@ let testServersCount = 2;
 let printTable = function(testserver){
   testServersCount--;
   if (0 == testServersCount) {
-    console.log('PrintTime');
     let table = new Table({
-        head: ['Test suite', 'fts', 'origin', 'Difference']
+        head: ['search', 'Test suite', 'fts', 'fts results', 'origin', 'origin results', 'Difference']
       //, colWidths: [100, 50, 50, 50]
     });
     for (let i in testSuite) {
       let row = [];
+      row.push(testSuite[i].search);
       row.push(testSuite[i].title);
-      let diff = 0;
+      let diff = [];
       for (let res of performResults['fts']) {
         if (res.number == i) {
           row.push(res.timeElapsed);
-          diff = diff - res.timeElapsed
+          row.push(res.nReturned);
+          diff.push(res.timeElapsed)
         }
       }
       for (let res of performResults['origin']) {
         if (res.number == i) {
           row.push(res.timeElapsed);
-          diff = diff + res.timeElapsed
+          row.push(res.nReturned);
+          diff.push(res.timeElapsed)
         }
       }
-      row.push(diff);
+      let diffStr = (diff[0] - diff[1]) + " ms / " + Math.round(diff[1]/ diff[0]) + " times";
+
+      row.push(diffStr);
       table.push(row);
     }
     console.log(table.toString())
@@ -70,7 +138,7 @@ let performTest = function(testserver, client, collectionName, testNum, testPara
   const collection = db.collection(collectionName);
   let query = {
     $text: {
-      $search: search
+      $search: testParam.search
     }}
 
   const cursor = collection.find(query);
@@ -100,10 +168,11 @@ let performTest = function(testserver, client, collectionName, testNum, testPara
       })
       return
     }
+    // debug[testserver]("answer %O", answer);
     let timeElapsed = answer.executionStats.executionTimeMillis;
     let nReturned = answer.executionStats.nReturned;
-    debug[testserver]('%s Time elapsed: %s for %s records',
-      testParam.title, timeElapsed, nReturned);
+    debug[testserver]('%s %s Time elapsed: %s for %s records',
+    testParam.search, testParam.title, timeElapsed, nReturned);
     performResults[testserver].push({
       number: testNum,
       nReturned: nReturned,
