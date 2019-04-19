@@ -1,5 +1,6 @@
 const MongoClient = require('mongodb').MongoClient;
 const Table = require('cli-table3');
+const colors = require('colors');
 
 require('dotenv').config();
 
@@ -10,21 +11,23 @@ var debug = {
 
 let search = process.argv[2];
 
+let isSerial = false;
+
 if (!search) {
   search = "little dog";
 }
 
 let testSuite = [
   {
-    title: 'limit 10, no score sort',
-    search: search,
+    title: 'limit 10',
+    search: "little dog",
     params: {
       limit: 10,
     }
   },
   {
     title: 'limit 10, score sort',
-    search: search,
+    search: "earth planet",
     params: {
       limit: 10,
       score: true,
@@ -32,15 +35,15 @@ let testSuite = [
     }
   },
   {
-    title: 'limit 100, no score sort',
-    search: search,
+    title: 'limit 100',
+    search: "house painting",
     params: {
       limit: 100,
     }
   },
   {
     title: 'limit 100, score sort',
-    search: search,
+    search: "big cat",
     params: {
       limit: 100,
       score: true,
@@ -49,15 +52,15 @@ let testSuite = [
   }
   ,
   {
-    title: 'limit 100, no score sort',
-    search: '"' + search + '"',
+    title: 'limit 100',
+    search: '"dancing rabbit"',
     params: {
       limit: 100,
     }
   },
   {
     title: 'limit 100, score sort',
-    search: '"' + search + '"',
+    search: '"black hole"',
     params: {
       limit: 100,
       score: true,
@@ -65,29 +68,45 @@ let testSuite = [
     }
   },
   {
-    title: 'all, no score sort',
-    search: search,
+    title: 'limit 1000',
+    search: "sunny day -tomorrow",
     params: {
+      limit: 1000,
     }
   },
   {
-    title: 'all, score sort',
-    search: search,
+    title: 'limit 1000, score sort',
+    search: "moon above -clouds",
     params: {
+      limit: 1000,
       score: true,
       sort: {score: { $meta: "textScore" }}
     }
   }
   ,
   {
-    title: 'all, no score sort',
-    search: '"' + search + '"',
+    title: 'all',
+    search: '"little dog visit"',
     params: {
     }
   },
   {
     title: 'all, score sort',
-    search: '"' + search + '"',
+    search: '"big small man"',
+    params: {
+      score: true,
+      sort: {score: { $meta: "textScore" }}
+    }
+  },
+  {
+    title: 'all',
+    search: '"Wall Street Journal"',
+    params: {
+    }
+  },
+  {
+    title: 'all, score sort',
+    search: '"Real-Estate Investing Guidebook"',
     params: {
       score: true,
       sort: {score: { $meta: "textScore" }}
@@ -110,21 +129,44 @@ let printTable = function(testserver){
       row.push(testSuite[i].search);
       row.push(testSuite[i].title);
       let diff = [];
+      let timeElapsed = [];
+      let nReturned = [];
       for (let res of performResults['fts']) {
         if (res.number == i) {
-          row.push(res.timeElapsed);
-          row.push(res.nReturned);
+          timeElapsed.push(res.timeElapsed);
+          nReturned.push(res.nReturned);
           diff.push(res.timeElapsed)
         }
       }
       for (let res of performResults['origin']) {
         if (res.number == i) {
-          row.push(res.timeElapsed);
-          row.push(res.nReturned);
+          timeElapsed.push(res.timeElapsed);
+          nReturned.push(res.nReturned);
           diff.push(res.timeElapsed)
         }
       }
-      let diffStr = (diff[0] - diff[1]) + " ms / " + Math.round(diff[1]/ diff[0]) + " times";
+      if(timeElapsed[0] > timeElapsed[1]) {
+        row.push(colors.red(timeElapsed[0]));
+      } else {
+        row.push(colors.green(timeElapsed[0]));
+      }
+      row.push(nReturned[0]);
+
+      if(timeElapsed[0] < timeElapsed[1]) {
+        row.push(colors.red(timeElapsed[1]));
+      } else {
+        row.push(colors.green(timeElapsed[1]));
+      }
+      row.push(nReturned[1]);
+      let diffNum = (diff[0] - diff[1]);
+      let diffStr = '';
+      if (diffNum > 0) {
+        diffStr = colors.red(diffNum) 
+      } else {
+        diffStr = colors.green(diffNum) 
+      }
+
+      diffStr += " ms / " + Math.round(diff[1]/ diff[0]) + " times";
 
       row.push(diffStr);
       table.push(row);
@@ -133,7 +175,7 @@ let printTable = function(testserver){
   }
 }
 
-let performTest = function(testserver, client, collectionName, testNum, testParam) {
+let performTest = function(testserver, client, collectionName, testNum, testParam, next) {
   const db = client.db(process.env.DB_NAME);
   const collection = db.collection(collectionName);
   let query = {
@@ -182,36 +224,75 @@ let performTest = function(testserver, client, collectionName, testNum, testPara
       client.close()
       printTable(testserver);
     }
+    if(next) {
+      next();
+    }
   })
 }
-MongoClient.connect(process.env.FTS_MONGO, function(err, client) {
-  if (err) {
-    debug.fts("Failed to connect to server %O", err);
-    return
-  }
-  debug.fts("Connected successfully to server");
+
+if(isSerial) {
+  MongoClient.connect(process.env.FTS_MONGO, function(err, client) {
+    if (err) {
+      debug.fts("Failed to connect to server %O", err);
+      return
+    }
+    debug.fts("Connected successfully to server");
+
+    let i = 0;
+    let next = function(){
+      i++;
+      if(testSuite[i]) {
+        performTest('fts', client, 'ol', i, testSuite[i], next);
+      }
+    }
+    performTest('fts', client, 'ol', i, testSuite[i], next);
+
+  });
+
+  MongoClient.connect(process.env.ORIGIN_MONGO, function(err, client) {
+    if (err) {
+      debug.origin("Failed to connect to server %O", err);
+      return
+    }
+    debug.origin("Connected successfully to server");
+
+    let i = 0;
+    let next = function(){
+      i++;
+      if(testSuite[i]) {
+        performTest('origin', client, 'ol', i, testSuite[i], next);
+      }
+    }
+    performTest('origin', client, 'ol', i, testSuite[i], next);
+
+  });
+} else {
+
+  MongoClient.connect(process.env.FTS_MONGO, function(err, client) {
+    if (err) {
+      debug.fts("Failed to connect to server %O", err);
+      return
+    }
+    debug.fts("Connected successfully to server");
 
 
 
-  for (let i in testSuite) {
-    performTest('fts', client, 'ol', i, testSuite[i]);
-  }
+    for (let i in testSuite) {
+      performTest('fts', client, 'ol', i, testSuite[i]);
+    }
 
-});
+  });
 
-MongoClient.connect(process.env.ORIGIN_MONGO, function(err, client) {
-  if (err) {
-    debug.origin("Failed to connect to server %O", err);
-    return
-  }
-  debug.origin("Connected successfully to server");
+  MongoClient.connect(process.env.ORIGIN_MONGO, function(err, client) {
+    if (err) {
+      debug.origin("Failed to connect to server %O", err);
+      return
+    }
+    debug.origin("Connected successfully to server");
 
-  const db = client.db(process.env.DB_NAME);
-  const collection = db.collection('ol');
+    for (let i in testSuite) {
+      performTest('origin', client, 'ol', i, testSuite[i]);
+    }
 
-  for (let i in testSuite) {
-    performTest('origin', client, 'ol', i, testSuite[i]);
-  }
-
-});
-
+  });
+}
