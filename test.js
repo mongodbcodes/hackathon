@@ -1,6 +1,8 @@
 const MongoClient = require('mongodb').MongoClient;
 const Table = require('cli-table3');
 const colors = require('colors');
+const fs = require('fs');
+const testSuite = require('./testSuites.js');
 
 require('dotenv').config();
 
@@ -17,142 +19,17 @@ if(process.argv[3] == "serial") {
   isSerial = true;
 }
 
-let testSuite = [];
 
 if (search) {
-  //search = "little dog";
-  testSuite = [
-    {
-      title: 'limit 10',
-      search: search,
-      params: {
-        limit: 10,
-      }
-    },
-    {
-      title: 'limit 10, score sort',
-      search: search,
-      params: {
-        limit: 10,
-        score: true,
-        sort: {score: { $meta: "textScore" }}
-      }
-    },
-    {
-      title: 'limit 100',
-      search: search,
-      params: {
-        limit: 100,
-      }
-    },
-    {
-      title: 'limit 100, score sort',
-      search: search,
-      params: {
-        limit: 100,
-        score: true,
-        sort: {score: { $meta: "textScore" }}
-      }
-    }
-  ]
+  
+  for(let i in testSuite) {
+    testSuite[i].search = search;
+  }
 } else {
-
-  testSuite = [
-    {
-      title: 'limit 10',
-      search: "little dog",
-      params: {
-        limit: 10,
-      }
-    },
-    {
-      title: 'limit 10, score sort',
-      search: "earth planet",
-      params: {
-        limit: 10,
-        score: true,
-        sort: {score: { $meta: "textScore" }}
-      }
-    },
-    {
-      title: 'limit 100',
-      search: "house painting",
-      params: {
-        limit: 100,
-      }
-    },
-    {
-      title: 'limit 100, score sort',
-      search: "big cat",
-      params: {
-        limit: 100,
-        score: true,
-        sort: {score: { $meta: "textScore" }}
-      }
-    }
-    ,
-    {
-      title: 'limit 100',
-      search: '"dancing rabbit"',
-      params: {
-        limit: 100,
-      }
-    },
-    {
-      title: 'limit 100, score sort',
-      search: '"black hole"',
-      params: {
-        limit: 100,
-        score: true,
-        sort: {score: { $meta: "textScore" }}
-      }
-    },
-    {
-      title: 'limit 1000',
-      search: "sunny day -tomorrow",
-      params: {
-        limit: 1000,
-      }
-    },
-    {
-      title: 'limit 1000, score sort',
-      search: "moon above -clouds",
-      params: {
-        limit: 1000,
-        score: true,
-        sort: {score: { $meta: "textScore" }}
-      }
-    }
-    ,
-    {
-      title: 'all',
-      search: '"little dog visit"',
-      params: {
-      }
-    },
-    {
-      title: 'all, score sort',
-      search: '"big small man"',
-      params: {
-        score: true,
-        sort: {score: { $meta: "textScore" }}
-      }
-    },
-    {
-      title: 'all',
-      search: '"Wall Street Journal"',
-      params: {
-      }
-    },
-    {
-      title: 'all, score sort',
-      search: '"Real-Estate Investing Guidebook"',
-      params: {
-        score: true,
-        sort: {score: { $meta: "textScore" }}
-      }
-    },
-  ]
+  const searches = fs.readFileSync('search.txt').toString().split("\n");
+  for(let i in testSuite) {
+    testSuite[i].search = searches[i];
+  }
 }
 let performResults = {}
 
@@ -225,17 +102,23 @@ let performTest = function(testserver, client, collectionName, testNum, testPara
     }}
 
   const cursor = collection.find(query);
+  //debug[testserver]('query', query);
   if (testParam.params.score) {
     cursor.project({ score: { $meta: "textScore" } });
+    //debug[testserver]('project', { score: { $meta: "textScore" } });
   }
 
-  if (testParam.params.sort && testserver !== 'fts') {
+  if (testParam.params.sort && testserver != 'fts') {
     cursor.sort(testParam.params.sort);
+    //debug[testserver]('sort', testParam.params.sort);
   }
 
   if (testParam.params.limit) {
     cursor.limit(testParam.params.limit);
+    //debug[testserver]('limit', testParam.params.limit);
   }
+
+  //debug[testserver]('query', testParam);
 
   cursor.explain(function(err, answer) {
     //debug[testserver]('err', err);
@@ -309,7 +192,7 @@ if(isSerial) {
   });
 } else {
 
-  MongoClient.connect(process.env.FTS_MONGO, function(err, client) {
+  MongoClient.connect(process.env.FTS_MONGO, {useNewUrlParser: true }, function(err, client) {
     if (err) {
       debug.fts("Failed to connect to server %O", err);
       return
@@ -324,7 +207,7 @@ if(isSerial) {
 
   });
 
-  MongoClient.connect(process.env.ORIGIN_MONGO, function(err, client) {
+  MongoClient.connect(process.env.ORIGIN_MONGO, {useNewUrlParser: true }, function(err, client) {
     if (err) {
       debug.origin("Failed to connect to server %O", err);
       return
