@@ -28,7 +28,7 @@ if (search) {
 } else {
   const searches = fs.readFileSync('search.txt').toString().split("\n");
   for(let i in testSuite) {
-    testSuite[i].search = searches[i];
+    testSuite[i].search = searches[i].trim();
   }
 }
 let performResults = {}
