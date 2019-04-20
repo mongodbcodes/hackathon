@@ -155,7 +155,7 @@ let performTest = function(testserver, client, collectionName, testNum, testPara
 }
 
 if(isSerial) {
-  MongoClient.connect(process.env.FTS_MONGO, function(err, client) {
+  MongoClient.connect(process.env.FTS_MONGO, {useNewUrlParser: true }, function(err, client) {
     if (err) {
       debug.fts("Failed to connect to server %O", err);
       return
@@ -173,7 +173,7 @@ if(isSerial) {
 
   });
 
-  MongoClient.connect(process.env.ORIGIN_MONGO, function(err, client) {
+  MongoClient.connect(process.env.ORIGIN_MONGO, {useNewUrlParser: true }, function(err, client) {
     if (err) {
       debug.origin("Failed to connect to server %O", err);
       return
